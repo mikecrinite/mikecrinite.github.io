@@ -1,10 +1,14 @@
 import Image from "next/image";
-import {spaceMono} from "./layout"
+import {Space_Mono} from "next/font/google";
+
+// TODO: Move to layout
+const spaceMono = Space_Mono({
+    variable: "--font-space-mono",
+    subsets: ["latin"],
+    weight: "400"
+});
 
 export default function Home() {
-    // TODO: Probably a better way of doing this
-    const profileImageScaleFactor = 5;
-
     return (
         <div
             className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
@@ -18,14 +22,14 @@ export default function Home() {
                     <Image
                         src={"/Mike_Fushimi_Inari_20191009_160250.jpg"}
                         alt={"Me on my 2019 solo trip to Japan"}
-                        width={(3456 / profileImageScaleFactor)}
-                        height={(4608 / profileImageScaleFactor)}
+                        width={3456}
+                        height={4608}
                         style={{
                             display: 'block',
                             borderRadius: '10%',
                             marginLeft: 'auto',
                             marginRight: 'auto',
-                            width: '50%',
+                            width: '30%',
                         }}
                     />
                 </div>
