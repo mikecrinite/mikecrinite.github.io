@@ -11,14 +11,10 @@ const spaceMono = Space_Mono({
 export default function Home() {
     return (
         <div
-            className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
+            className="grid items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
             <main className="justify-items-center flex flex-col gap-8 row-start-2 items-center sm:items-start">
                 {/*Center image div*/}
-                <div
-                    style={{
-                        display: "flex",
-                        justifyContent: "center",
-                    }}>
+                <div className="centered">
                     <Image
                         src={"/Mike_Fushimi_Inari_20191009_160250.jpg"}
                         alt={"Me on my 2019 solo trip to Japan"}
@@ -33,13 +29,12 @@ export default function Home() {
                         }}
                     />
                 </div>
-                <div
+                <h1 className={`${spaceMono.className}`}
                     style={{
-                            display: "flex",
-                            justifyContent: "center",
-                        }}>
-                    <h1 className={spaceMono.className}>Michael Crinite - Full Stack Software Engineer - Under Construction</h1>
-                </div>
+                        textAlign: 'center',
+                        width: '100%',
+                        margin: 'auto',
+                }}>Michael Crinite - Full Stack Software Engineer</h1>
             </main>
             <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
                 <a
