@@ -27,11 +27,11 @@ jobs:
         with:
           static_site_generator: next
       - name: Build with Next.js
-        run: npx next build
+        run: npm run build
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: ./out
   deploy:
     environment:
       name: github-pages
