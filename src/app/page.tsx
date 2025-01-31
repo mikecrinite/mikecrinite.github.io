@@ -61,11 +61,26 @@ export default function Home() {
                     <Image
                         aria-hidden
                         src="/linkedin.svg"
-                        alt="Globe icon"
+                        alt="LinkedIn icon"
                         width={16}
                         height={16}
                     />
                     LinkedIn
+                </a>
+                <a
+                    className="flex items-center gap-2 hover:underline hover:underline-offset-4"
+                    href="https://www.instagram.com/mikecrinite"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                    <Image
+                        aria-hidden
+                        src="/instagram.svg"
+                        alt="Instagram icon"
+                        width={16}
+                        height={16}
+                    />
+                    Instagram
                 </a>
                 <a
                     className="flex items-center gap-2 hover:underline hover:underline-offset-4"
