@@ -1,0 +1,21 @@
+import type {Metadata} from "next";
+import "./globals.css";
+import Header from "@/components/header"
+import {geistSans, geistMono, spaceMono} from "@/components/fonts";
+import '@mantine/core/styles.css';
+
+export const metadata: Metadata = {
+    title: "Mike Crinite",
+    description: "For all things mikecrinite",
+};
+
+export default function RootLayout({children,}: Readonly<{ children: React.ReactNode; }>) {
+    return (
+        <html lang="en">
+            <body className={`${spaceMono.variable} ${geistSans.variable} ${geistMono.variable} antialiased`}>
+                    <Header/>
+                    {children}
+            </body>
+        </html>
+    );
+}
