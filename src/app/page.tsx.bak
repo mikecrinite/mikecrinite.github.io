@@ -1,17 +1,13 @@
 import Image from "next/image";
-import {Space_Mono} from "next/font/google";
-
-// TODO: Move to layout
-const spaceMono = Space_Mono({
-    variable: "--font-space-mono",
-    subsets: ["latin"],
-    weight: "400"
-});
+import {spaceMono} from "@/components/fonts";
 
 export default function Home() {
     return (
         <div
             className="grid items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
+            {/*<header className="row-start-1">*/}
+            {/*    <p>Michael Crinite</p>*/}
+            {/*</header>*/}
             <main className="justify-items-center flex flex-col gap-8 row-start-2 items-center sm:items-start">
                 {/*Center image div*/}
                 <div className="centered">
