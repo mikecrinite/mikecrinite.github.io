@@ -1,7 +1,7 @@
 import {spaceMono} from "@/components/fonts";
 import {useDisclosure} from "@mantine/hooks";
 import {Menu, Container, Center, Group, Burger, Title} from "@mantine/core";
-// import { IconChevronDown } from '@tabler/icons-react';
+import { IconChevronDown } from '@tabler/icons-react';
 import classes from '@/static/Header.module.css';
 
 const links = [
@@ -63,7 +63,7 @@ export default function Header() {
                         >
                             <Center>
                                 <span className={classes.linkLabel}>{link.label}</span>
-                                {/*<IconChevronDown size={14} stroke={1.5} />*/}
+                                <IconChevronDown size={14} stroke={1.5} />
                             </Center>
                         </a>
                     </Menu.Target>
