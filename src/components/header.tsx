@@ -21,7 +21,7 @@ const links = [
         links: [
             { icon: '', link: 'https://www.github.com/mikecrinite', label: 'Github', external: true},
             { icon: '', link: 'https://www.linkedin.com/in/michael-crinite-98ba6b132/', label: 'LinkedIn', external: true},
-            { icon: '', link: '/Mike_Crinite_2025_02_18.pdf', label: 'Resume', external: true}
+            { icon: '', link: '/Mike_Crinite_Resume_2025_02_18.pdf', label: 'Resume', external: true}
         ],
     },
     // {

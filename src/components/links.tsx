@@ -40,7 +40,7 @@ export default function Links() {
                 <Grid.Col span={'content'}>
                     <a
                         className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-                        href="/Mike_Crinite_2025_02_18.pdf"
+                        href="/Mike_Crinite_Resume_2025_02_18.pdf"
                         target="_blank"
                         rel="noopener noreferrer"
                     >
