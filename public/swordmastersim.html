@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Simple 4x4 Arena Game</title>
+    <style>
+        body {
+            background-color: #221a14;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            color: white;
+            font-family: sans-serif;
+            position: relative; 
+        }
+        #ui {
+            position: absolute;
+            top: 30px;
+            right: 40px;
+            z-index: 10;
+        }
+        button {
+            padding: 15px 30px;
+            font-size: 24px;
+            font-weight: bold;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+            width: 250px; 
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button.reset-mode {
+            background-color: #f44336;
+        }
+        button.reset-mode:hover {
+            background-color: #d32f2f;
+        }
+        canvas {
+            border: 4px solid #5c4033; 
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="ui">
+        <button id="startBtn">Start</button>
+    </div>
+    
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        // setup
+        const WORLD_SIZE = 900;
+        const PLAYER_SIZE = 40;
+        const PLAYER_START = (WORLD_SIZE / 2) - (PLAYER_SIZE / 2);
+
+        const canvas = document.getElementById('gameCanvas');
+        canvas.width = WORLD_SIZE;
+        canvas.height = WORLD_SIZE;
+        const ctx = canvas.getContext('2d');
+
+        const GRID_COLS = 4;
+        const GRID_ROWS = 4;
+        const CELL_WIDTH = WORLD_SIZE / GRID_COLS; 
+        const CELL_HEIGHT = WORLD_SIZE / GRID_ROWS; 
+
+        // state
+        let gameStarted = false;
+        let gameOver = false;
+        
+        let redZone = null; 
+        let activeRedQuadrants = []; 
+        
+        let castTimer = 0;
+        const CAST_DURATION = 3000; 
+        let arrows = [];
+        let lastArrowPattern = null; // Track the previous pattern
+
+        const player = {
+            x: PLAYER_START, 
+            y: PLAYER_START,
+            width: PLAYER_SIZE,
+            height: PLAYER_SIZE,
+            speed: 4, 
+            color: '#4CAF50' 
+        };
+
+        // inputs
+        const keys = {
+            w: false, a: false, s: false, d: false,
+            ArrowUp: false, ArrowLeft: false, ArrowDown: false, ArrowRight: false
+        };
+
+        window.addEventListener('keydown', (e) => {
+            if (keys.hasOwnProperty(e.key)) keys[e.key] = true;
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (keys.hasOwnProperty(e.key)) keys[e.key] = false;
+        });
+
+        // waves
+        function startNextWave() {
+            castTimer = 0;
+            
+            // set red zone once
+            if (!redZone) {
+                const quadrantStartAngles = [-0.75, -0.25, 0.25, 0.75];
+                const zoneNames = [ ['N', 'E'], ['E', 'S'], ['S', 'W'], ['W', 'N'] ];
+                const randomPick = Math.floor(Math.random() * 4);
+                
+                redZone = {
+                    startAngle: quadrantStartAngles[randomPick] * Math.PI,
+                    endAngle: (quadrantStartAngles[randomPick] + 1) * Math.PI 
+                };
+                activeRedQuadrants = zoneNames[randomPick];
+            }
+
+            // Enforce opposite directions for rows and columns, ensuring it's not identical to the last one
+            let row1Dir, col1Dir;
+            do {
+                row1Dir = Math.random() > 0.5 ? 'E' : 'W';
+                col1Dir = Math.random() > 0.5 ? 'N' : 'S';
+            } while (
+                lastArrowPattern &&
+                lastArrowPattern.row1 === row1Dir &&
+                lastArrowPattern.col1 === col1Dir
+            );
+
+            lastArrowPattern = { row1: row1Dir, col1: col1Dir };
+
+            const row2Dir = row1Dir === 'E' ? 'W' : 'E';
+            const col2Dir = col1Dir === 'N' ? 'S' : 'N';
+
+            arrows = [
+                { type: 'row', index: 1, dir: row1Dir },
+                { type: 'row', index: 2, dir: row2Dir },
+                { type: 'col', index: 1, dir: col1Dir },
+                { type: 'col', index: 2, dir: col2Dir }
+            ];
+        }
+
+        function evaluateWave() {
+            let playerCol = Math.floor((player.x + player.width / 2) / CELL_WIDTH);
+            let playerRow = Math.floor((player.y + player.height / 2) / CELL_HEIGHT);
+            
+            let died = false;
+            
+            for (let arrow of arrows) {
+                let hitSide = null;
+                
+                if (arrow.type === 'row' && playerRow === arrow.index) {
+                    hitSide = arrow.dir === 'E' ? 'W' : 'E';
+                } else if (arrow.type === 'col' && playerCol === arrow.index) {
+                    hitSide = arrow.dir === 'S' ? 'N' : 'S';
+                }
+                
+                if (hitSide && activeRedQuadrants.includes(hitSide)) {
+                    died = true;
+                    break;
+                }
+            }
+            
+            if (died) {
+                gameOver = true;
+                document.getElementById('startBtn').textContent = 'Reset';
+            } else {
+                startNextWave();
+            }
+        }
+
+        // --- 5. START / RESET BUTTON LOGIC ---
+        const startBtn = document.getElementById('startBtn');
+        
+        startBtn.addEventListener('click', () => {
+            if (!gameStarted) {
+                gameStarted = true;
+                gameOver = false;
+                startBtn.textContent = 'Reset';
+                startBtn.classList.add('reset-mode'); 
+                lastArrowPattern = null;
+                startNextWave();
+            } else {
+                gameStarted = false;
+                gameOver = false;
+                startBtn.textContent = 'Start';
+                startBtn.classList.remove('reset-mode'); 
+                redZone = null; 
+                arrows = [];
+                lastArrowPattern = null;
+                player.x = PLAYER_START;
+                player.y = PLAYER_START;
+            }
+        });
+
+        // lewp
+        function update(dt) {
+            let dx = 0;
+            let dy = 0;
+
+            if (keys.w || keys.ArrowUp) dy -= 1;
+            if (keys.s || keys.ArrowDown) dy += 1;
+            if (keys.a || keys.ArrowLeft) dx -= 1;
+            if (keys.d || keys.ArrowRight) dx += 1;
+
+            if (dx !== 0 && dy !== 0) {
+                const length = Math.sqrt(dx * dx + dy * dy);
+                dx /= length;
+                dy /= length;
+            }
+
+            let nextX = player.x + (dx * player.speed);
+            let nextY = player.y + (dy * player.speed);
+
+            nextX = Math.max(0, Math.min(nextX, WORLD_SIZE - player.width));
+            nextY = Math.max(0, Math.min(nextY, WORLD_SIZE - player.height));
+
+            player.x = nextX;
+            player.y = nextY;
+
+            if (gameStarted && !gameOver) {
+                castTimer += dt;
+                if (castTimer >= CAST_DURATION) {
+                    evaluateWave();
+                }
+            }
+        } 
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // --- Draw Background Grid ---
+            for (let row = 0; row < GRID_ROWS; row++) {
+                for (let col = 0; col < GRID_COLS; col++) {
+                    ctx.fillStyle = (row + col) % 2 === 0 ? '#C19A6B' : '#B08951';
+                    ctx.fillRect(col * CELL_WIDTH, row * CELL_HEIGHT, CELL_WIDTH, CELL_HEIGHT);
+                    
+                    if (
+                        row === 0 && [0,2,3].includes(col) ||
+                        row === 1 && [0].includes(col) ||
+                        row === 2 && [3].includes(col) ||
+                        row === 3 && [0,1,3].includes(col)
+                    ) {
+                        ctx.fillStyle = 'rgba(255, 165, 0, 0.4)';
+                        ctx.fillRect(col * CELL_WIDTH, row * CELL_HEIGHT, CELL_WIDTH, CELL_HEIGHT);
+                    }
+
+                    ctx.strokeStyle = '#8B5A2B';
+                    ctx.lineWidth = 4;
+                    ctx.strokeRect(col * CELL_WIDTH, row * CELL_HEIGHT, CELL_WIDTH, CELL_HEIGHT);
+                }
+            }
+
+            // --- Draw Attack Arrows ---
+            if (gameStarted && !gameOver) {
+                const progress = castTimer / CAST_DURATION;
+                const alpha = 0.2 + (progress * 0.4);
+                const lineAlpha = 0.5 + (progress * 0.5); 
+                
+                // Calculate how many pixels the arrows should slide (exactly 1 cell width over the duration)
+                const moveOffset = progress * CELL_WIDTH;
+                
+                const tracks = [0.25, 0.5, 0.75]; 
+
+                for (let arrow of arrows) {
+                    ctx.save();
+                    
+                    if (arrow.type === 'row') {
+                        let y = arrow.index * CELL_HEIGHT;
+
+                        ctx.fillStyle = `rgba(255, 215, 0, ${alpha})`;
+                        ctx.fillRect(0, y, WORLD_SIZE, CELL_HEIGHT);
+                        
+                        for (let t of tracks) {
+                            let trackY = y + CELL_HEIGHT * t;
+                            
+                            // Orange Line
+                            ctx.beginPath();
+                            ctx.moveTo(0, trackY);
+                            ctx.lineTo(WORLD_SIZE, trackY);
+                            ctx.strokeStyle = `rgba(255, 165, 0, ${lineAlpha})`;
+                            ctx.lineWidth = 4; 
+                            ctx.stroke();
+
+                            // Moving Arrows
+                            ctx.fillStyle = `rgba(255, 255, 255, ${lineAlpha})`;
+                            ctx.font = 'bold 30px sans-serif'; 
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            
+                            // Loop from -1 to GRID_COLS so new arrows slide in from off-screen
+                            for (let col = -1; col <= GRID_COLS; col++) {
+                                let baseCenterX = col * CELL_WIDTH + CELL_WIDTH / 2;
+                                let centerX = arrow.dir === 'E' ? baseCenterX + moveOffset : baseCenterX - moveOffset;
+                                ctx.fillText(arrow.dir === 'E' ? '►' : '◄', centerX, trackY);
+                            }
+                        }
+
+                    } else {
+                        let x = arrow.index * CELL_WIDTH;
+                        
+                        // Yellow Warning Background
+                        ctx.fillStyle = `rgba(255, 215, 0, ${alpha})`;
+                        ctx.fillRect(x, 0, CELL_WIDTH, WORLD_SIZE);
+                        
+                        for (let t of tracks) {
+                            let trackX = x + CELL_WIDTH * t;
+                            
+                            // Orange Line
+                            ctx.beginPath();
+                            ctx.moveTo(trackX, 0);
+                            ctx.lineTo(trackX, WORLD_SIZE);
+                            ctx.strokeStyle = `rgba(255, 165, 0, ${lineAlpha})`;
+                            ctx.lineWidth = 4;
+                            ctx.stroke();
+
+                            // Moving Arrows
+                            ctx.fillStyle = `rgba(255, 255, 255, ${lineAlpha})`;
+                            ctx.font = 'bold 30px sans-serif';
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            
+                            // Loop from -1 to GRID_ROWS so new arrows slide in from off-screen
+                            for (let row = -1; row <= GRID_ROWS; row++) {
+                                let baseCenterY = row * CELL_HEIGHT + CELL_HEIGHT / 2;
+                                let centerY = arrow.dir === 'S' ? baseCenterY + moveOffset : baseCenterY - moveOffset;
+                                
+                                ctx.save();
+                                ctx.translate(trackX, centerY);
+                                ctx.rotate(arrow.dir === 'S' ? Math.PI / 2 : -Math.PI / 2);
+                                ctx.fillText('►', 0, 0); 
+                                ctx.restore();
+                            }
+                        }
+                    }
+                    ctx.restore();
+                }
+            }
+
+            // --- Draw Player ---
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+
+            // --- Draw Quadrant Shield ---
+            if (gameStarted && redZone && !gameOver) {
+                const centerX = player.x + (player.width / 2);
+                const centerY = player.y + (player.height / 2);
+                const radius = 60; 
+
+                ctx.save(); 
+
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, redZone.startAngle, redZone.endAngle);
+                ctx.closePath();
+                ctx.fillStyle = 'rgba(255, 50, 50, 0.6)'; 
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                const angles = [-0.75, -0.25, 0.25, 0.75].map(a => a * Math.PI);
+                for (let angle of angles) {
+                    ctx.beginPath();
+                    ctx.moveTo(centerX, centerY);
+                    ctx.lineTo(centerX + Math.cos(angle) * radius, centerY + Math.sin(angle) * radius);
+                    ctx.stroke();
+                }
+                ctx.restore();
+            }
+
+            // --- Draw Cast Bar ---
+            if (gameStarted && !gameOver) {
+                const barWidth = 600;
+                const barHeight = 25;
+                const bx = (WORLD_SIZE - barWidth) / 2;
+                const by = WORLD_SIZE - 40;
+
+                ctx.fillStyle = 'rgba(0,0,0,0.7)';
+                ctx.fillRect(bx, by, barWidth, barHeight);
+
+                ctx.fillStyle = 'orange';
+                ctx.fillRect(bx, by, barWidth * (castTimer / CAST_DURATION), barHeight);
+
+                ctx.fillStyle = 'white';
+                ctx.font = '18px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('', bx + barWidth / 2, by + barHeight / 2 + 2);
+            }
+
+            // --- Draw Game Over Text ---
+            if (gameOver) {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = 'red';
+                ctx.font = 'bold 80px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('X', WORLD_SIZE / 2, WORLD_SIZE / 2);
+            }
+        }
+
+        // --- 7. BOOTSTRAPPING THE LOOP ---
+        let lastTime = performance.now();
+        
+        function gameLoop(timestamp) {
+            let dt = timestamp - lastTime;
+            lastTime = timestamp;
+            
+            if (dt > 100) dt = 16; 
+
+            update(dt);
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        requestAnimationFrame(gameLoop);
+    </script>
+</body>
+</html>
